@@ -3,11 +3,11 @@ import { Viewer, Entity } from "resium";
 import { Cartesian3 } from "cesium";
 import useWebSocket from './hooks/useWebSocket';
 
-// Hardcoded GPS coordinate for the drone (Hyderabad example)
+// Hardcoded GPS coordinate for the drone (Hyderabad area)
 const dronePosition = Cartesian3.fromDegrees(78.4867, 17.3850, 100); 
 
 function App() {
-  // Maintain your WebSocket connection from Issue #11
+  // Maintaining WebSocket from Issue #11
   useWebSocket('ws://localhost:8000/ws/telemetry/');
 
   return (
@@ -18,12 +18,14 @@ function App() {
         <p>Telemetry Status: Connected (Check Console)</p>
       </div>
 
-      {/* Cesium Globe with Entity */}
+      {/* Cesium Globe with Entity and Auto-Camera */}
       <Viewer full>
         <Entity
           position={dronePosition}
-          point={{ pixelSize: 15, color: "red" }} // Represents the drone
+          point={{ pixelSize: 20, color: "red" }} 
           description="Static Drone Entity"
+          selected={true} // This highlights the entity
+          tracked={true}  // This tells the camera to follow it
         />
       </Viewer>
     </div>
