@@ -10,10 +10,20 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+env_path = BASE_DIR / '.env'
+load_dotenv(env_path)
+
+if os.name == 'nt':
+    # Make sure this matches the exact file name you found in Step 1!
+    GDAL_LIBRARY_PATH = r'C:/Program Files/PostgreSQL/17/bin/libgdal-35.dll' 
+    GEOS_LIBRARY_PATH = r'C:/Program Files/PostgreSQL/17/bin/libgeos_c.dll'
 
 
 # Quick-start development settings - unsuitable for production
@@ -38,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.gis",
     "channels",
 ]
 
@@ -77,8 +88,12 @@ ASGI_APPLICATION = "amrit_api.asgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
+        "NAME": os.environ.get('DB_NAME'),
+        "USER": os.environ.get('DB_USER'),
+        "PASSWORD": os.environ.get('DB_PASSWORD'),
+        "HOST": os.environ.get('DB_HOST', 'localhost'),
+        "PORT": os.environ.get('DB_PORT', 5432),
     }
 }
 
