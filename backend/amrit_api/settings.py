@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.gis",
     "channels",
+    'core',
 ]
 
 MIDDLEWARE = [
