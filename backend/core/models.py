@@ -20,14 +20,14 @@ class SurvivorCluster(models.Model):
 
     radius_meters = models.FloatField(default=0.0)
 
-    confidece_score = models.FloatField()
+    confidence_score = models.FloatField()
 
     timestamp = models.DateTimeField(auto_now_add=True)
 
     is_rescued = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Cluster of {self.estimated_count} survivors - Confidence: {self.confidece_score}%"
+        return f"Cluster of {self.estimated_count} survivors - Confidence: {self.confidence_score}%"
     
 
 class DamageReport(models.Model):
