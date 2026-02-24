@@ -10,6 +10,7 @@ constantly==23.10.4
 cryptography==46.0.5
 daphne==4.2.1
 Django==5.2.11
+django-cors-headers==4.9.0
 django-filter==25.2
 djangorestframework==3.16.1
 djangorestframework-gis==1.2.0
