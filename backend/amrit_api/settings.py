@@ -141,3 +141,15 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+
+# CHANNEL LAYERS: The "nervous system" for WebSockets
+# We are using an industrial-grade Redis container for message brokering.
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)], # Points exactly to your Docker container!
+        },
+    },
+}
