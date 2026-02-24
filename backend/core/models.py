@@ -55,4 +55,4 @@ class DamageReport(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return "f{self.get_damage_type_display()} ({self.get_severity_level_display()})"
+        return f"{self.get_damage_type_display()} ({self.get_severity_level_display()})"
