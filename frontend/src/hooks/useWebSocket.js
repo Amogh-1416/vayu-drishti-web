@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-const useWebSocket = (url) => {
+const useWebSocket = (url, onMessage) => {
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -15,6 +15,7 @@ const useWebSocket = (url) => {
       try {
         const data = JSON.parse(event.data);
         console.log('🛰️ Live Telemetry Data:', data);
+        if (typeof onMessage === 'function') onMessage(data);
       } catch (err) {
         console.error('❌ Error parsing message:', err);
       }
@@ -25,7 +26,7 @@ const useWebSocket = (url) => {
     return () => {
       if (socketRef.current) socketRef.current.close();
     };
-  }, [url]);
+  }, [url, onMessage]);
 
   return socketRef.current;
 };
