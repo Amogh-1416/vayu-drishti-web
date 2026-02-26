@@ -1,33 +1,20 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useState } from "react";
 
 const useWebSocket = (url) => {
-  const socketRef = useRef(null);
+  const [data, setData] = useState(null);
 
   useEffect(() => {
-    socketRef.current = new WebSocket(url);
+    const socket = new WebSocket(url);
 
-    socketRef.current.onopen = () => {
-      console.log('✅ Connected to WebSocket Stream');
+    socket.onmessage = (event) => {
+      const parsedData = JSON.parse(event.data);
+      setData(parsedData); // Output real-time coordinate state
     };
 
-    // Requirement: Connect and simply print incoming live drone coordinates
-    socketRef.current.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('🛰️ Live Telemetry Data:', data);
-      } catch (err) {
-        console.error('❌ Error parsing message:', err);
-      }
-    };
-
-    socketRef.current.onclose = () => console.log('🔌 Connection Closed');
-
-    return () => {
-      if (socketRef.current) socketRef.current.close();
-    };
+    return () => socket.close();
   }, [url]);
 
-  return socketRef.current;
+  return data; 
 };
 
 export default useWebSocket;
