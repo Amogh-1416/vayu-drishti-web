@@ -12,14 +12,13 @@ class TelemetryConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         data = json.loads(text_data)
-        # Relay data to the group
         await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'telemetry_message',
-                'message': data.get('message', data)
-            }
-        )
+        self.room_group_name,
+        {
+            "type": "telemetry_message",
+            "message": data
+        }
+    )
 
     async def telemetry_message(self, event):
         # This sends the data to your browser
