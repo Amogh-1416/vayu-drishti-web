@@ -5,12 +5,12 @@ import websockets
 uri = "ws://127.0.0.1:8000/ws/telemetry/"
 
 async def fly_drone():
-    # Heartbeat settings prevent the connection from timing out
     async with websockets.connect(
         uri, 
-        open_timeout=20,
-        ping_interval=20, 
-        ping_timeout=10 
+        open_timeout=30,
+        ping_interval=10,  
+        ping_timeout=20,    
+        close_timeout=10
     ) as websocket:
         print("✅ Connected to Vayu Drishti")
         lat, lon = 17.3850, 78.4867
@@ -24,7 +24,7 @@ async def fly_drone():
             }
             await websocket.send(json.dumps(payload))
             print(f"Sent: {lat}, {lon}")
-            await asyncio.sleep(1.0) # Stable update rate
+            await asyncio.sleep(2.0) 
 
 try:
     asyncio.run(fly_drone())

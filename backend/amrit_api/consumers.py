@@ -11,16 +11,22 @@ class TelemetryConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        # Relay data to the group
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'telemetry_message',
-                'message': data.get('message', data)
-            }
-        )
+        try:
+            data = json.loads(text_data)
+            payload = data.get('message', data)
+
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'telemetry_message',
+                    'message': payload
+                }
+            )
+        except Exception as e:
+            print(f"⚠️ Telemetry error: {e}")
 
     async def telemetry_message(self, event):
-        # This sends the data to your browser
-        await self.send(text_data=json.dumps(event['message']))
+        try:
+            await self.send(text_data=json.dumps(event['message']))
+        except Exception as e:
+            print(f"⚠️ Failed to send to browser: {e}")
