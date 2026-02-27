@@ -68,6 +68,15 @@ function App() {
           <Entity
             name="Alpha-1"
             position={dronePosition}
+            label={{ 
+            text: "Alpha-1", 
+            font: "14px monospace", 
+            fillColor: Cesium.Color.LIME,
+            outlineColor: Cesium.Color.BLACK,
+            outlineWidth: 2,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM, 
+            pixelOffset: new Cesium.Cartesian2(0, -20) 
+          }}
             point={{ pixelSize: 20, color: Cesium.Color.RED }}
             tracked={isTracked}
             interpolationAlgorithm={HermitePolynomialApproximation}
