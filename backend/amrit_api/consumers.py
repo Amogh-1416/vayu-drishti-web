@@ -1,24 +1,26 @@
 import json
-import asyncio
-import random
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 class TelemetryConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        self.room_group_name = 'telemetry'
+        await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
-        self.keep_sending = True
-        # Fulfills sub-second update requirement from Issue #10
-        asyncio.create_task(self.broadcast_updates())
 
     async def disconnect(self, close_code):
-        self.keep_sending = False
+        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
 
-    async def broadcast_updates(self):
-        while self.keep_sending:
-            data = {
-                "latitude": 17.3850 + random.uniform(-0.001, 0.001),
-                "longitude": 78.4867 + random.uniform(-0.001, 0.001),
-                "altitude": random.uniform(50, 60)
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        # Relay data to the group
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'telemetry_message',
+                'message': data.get('message', data)
             }
-            await self.send(text_data=json.dumps(data))
-            await asyncio.sleep(0.2) # 5 updates per second
+        )
+
+    async def telemetry_message(self, event):
+        # This sends the data to your browser
+        await self.send(text_data=json.dumps(event['message']))
