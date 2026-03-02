@@ -6,3 +6,5 @@ __pycache__/
 # Python/Django
 venv/
 db.sqlite3
+
+drone_videos/

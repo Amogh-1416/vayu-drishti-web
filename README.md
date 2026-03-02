@@ -86,3 +86,28 @@ Open a third terminal window (ensure your Python venv is active):
 python fake_drone.py
 ```
 ---
+
+
+---
+---
+## These commands are for feat/integarting branch only
+```
+# Start the Celery worker in vayu-drishti-ml for tasks.py
+"venv\Scripts\python.exe" -m celery -A tasks worker --loglevel=info --pool=solo
+
+# Start the Django Server
+python manage.py runserver
+
+# Start bridge_listener.py in vayu-drishti-web Backend
+python bridge_listener.py
+
+# Start react server in vayu-drishti-web Frontend
+npm run dev
+
+# Start trigger_test.py in vayu-drishti-ml
+python trigger_test.py
+
+# Need to set the path of the video in trigger_test.py for the destroyed_town.mp4
+
+```
+

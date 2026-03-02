@@ -3,6 +3,8 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.gis.geos import Point
 from .models import Drone
+import json
+from channels.generic.websocket import AsyncWebsocketConsumer
 
 class DroneTelemetryConsumer(AsyncWebsocketConsumer):
 
@@ -71,3 +73,22 @@ class DroneTelemetryConsumer(AsyncWebsocketConsumer):
                 defaults={'location': current_location}
             )
             print(f"Throttled save: Updated {drone_name} location in Postgres")
+
+
+
+
+class DisasterConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        # Join the "disaster_data" group defined in your bridge script
+        await self.channel_layer.group_add("disaster_data", self.channel_name)
+        await self.accept()
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard("disaster_data", self.channel_name)
+
+    # This name MUST match the "type" in bridge_listener.py (send_disaster_update)
+    async def send_disaster_update(self, event):
+        payload = event["payload"]
+
+        # Send the actual JSON to the React/Vue frontend
+        await self.send(text_data=json.dumps(payload))
