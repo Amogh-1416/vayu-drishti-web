@@ -132,9 +132,38 @@ cd frontend && npm run dev
 # You can customize start_lat, start_lng, and duration respectively.
 python fake_drone.py 17.3850 78.4867 60
 
-# Routing Feature
-# 1. As ML processes data (via trigger_test.py or live), survivor clusters appear in the Left Sidebar on the UI.
-# 2. Click "Calculate Safe Route" in the UI to request an optimal route from Rescue Base to the survivors.
-# 3. The Backend uses a spatial Grid-based A* Algorithm to calculate a safe route avoiding Damage zones.
-# 4. A safe path polyline is visualized in CesiumJS rendering over the 3D map.
+### 🗺️ Advanced Routing Feature
+
+The new **Routing Feature** calculates the safest and most optimal path for rescue forces to reach detected survivor clusters, fully accounting for real-time segmented damage zones using the **RescueNet** dataset classification.
+
+#### How It Works:
+1. As the ML pipeline (`trigger_test.py` or live drone feed) processes data, bounding boxes and segmentations are broadcasted to the frontend via WebSockets.
+2. The UI lists detected **Survivor Clusters** dynamically in the Emergency Routing panel on the left.
+3. Users click **"Calculate Safe Route"** for a specific cluster.
+4. The backend initiates a **Grid-based A*** algorithm using the `networkx`, `numpy`, and `shapely` Python libraries.
+
+#### Algorithm Specifications:
+- **Algorithm:** Grid-based A* Search Algorithm.
+- **Heuristic:** Euclidean Distance (`sqrt((x1-x2)^2 + (y1-y2)^2)`).
+- **Grid Resolution:** ~10 meters per grid cell (`0.0001` degrees).
+- **Obstacle Buffer Radius:** ~20 meters (`0.0002` degrees).
+
+#### Obstacle Avoidance Matrix (RescueNet Dataset):
+The algorithm dynamically queries the PostGIS database for all `DamageReport` geometries. Based on the RescueNet classification, it determines whether a segment is safely traversable or must be avoided:
+
+**🚫 Obstacles (Treated as Impassable):**
+- `WATER` (Natural or Flood)
+- `BUILDING_MINOR_DAMAGE`
+- `BUILDING_MAJOR_DAMAGE`
+- `BUILDING_TOTAL_DESTRUCTION`
+- `VEHICLE`
+- `ROAD_BLOCKED`
+- `TREE`
+- `POOL`
+
+**✅ Safe Zones (Permitted for Routing):**
+- `BUILDING_NO_DAMAGE`
+- `ROAD_CLEAR`
+
+If a route is successfully found around the obstacles, it is transmitted back to the frontend and visualized as a glowing cyan polyline over the 3D CesiumJS globe.
 ```

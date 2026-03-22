@@ -98,12 +98,17 @@ def build_safe_path(start_coord, end_coord, damage_reports):
 
     # Create Shapely polygons for damage reports
     obstacle_polygons = []
+
+    # Safe classes that should NOT block routing paths
+    SAFE_CLASSES = ['BUILDING_NO_DAMAGE', 'ROAD_CLEAR']
+
     for report in damage_reports:
-        # Damage reports only have a point location in the DB right now based on core/models.py
-        # We will create a small buffer around the point to represent the damage zone
-        # Buffer of 0.0002 is roughly 20 meters radius
-        report_point = Point(report.location.x, report.location.y)
-        obstacle_polygons.append(report_point.buffer(0.0002))
+        if report.damage_type not in SAFE_CLASSES:
+            # Damage reports only have a point location in the DB right now based on core/models.py
+            # We will create a small buffer around the point to represent the damage zone
+            # Buffer of 0.0002 is roughly 20 meters radius
+            report_point = Point(report.location.x, report.location.y)
+            obstacle_polygons.append(report_point.buffer(0.0002))
 
     # Build a spatial index for fast obstacle checking
     tree = STRtree(obstacle_polygons)
