@@ -19,6 +19,11 @@ function App() {
   const [liveDamage, setLiveDamage] = useState([]);
   const [esriProvider, setEsriProvider] = useState(null);
 
+  // Routing State
+  const [routePath, setRoutePath] = useState([]);
+  const [calculatingRoute, setCalculatingRoute] = useState(false);
+  const [routeError, setRouteError] = useState(null);
+
   // WebSockets
   const telemetry = useWebSocket('ws://127.0.0.1:8000/ws/telemetry/');
   const disasterUpdate = useWebSocket('ws://127.0.0.1:8000/ws/disaster/'); // Listen to the Bridge
@@ -71,10 +76,63 @@ function App() {
     return Cartesian3.fromDegrees(78.4867, 17.3850, 100); 
   }, [telemetry]);
 
+  const handleRouteRequest = async (survivor) => {
+    setCalculatingRoute(true);
+    setRouteError(null);
+    try {
+      // Assuming Rescue Base is at some static point (could be made dynamic)
+      const rescueBase = { lat: 17.3840, lng: 78.4850 };
+
+      const response = await fetch('http://127.0.0.1:8000/api/route/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          start_lat: rescueBase.lat,
+          start_lng: rescueBase.lng,
+          end_lat: survivor.lat,
+          end_lng: survivor.lng
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
+        const routeCartesians = data.path.map(p => Cartesian3.fromDegrees(p.lng, p.lat));
+        setRoutePath(routeCartesians);
+      } else {
+        setRouteError(data.error || "Failed to calculate route");
+      }
+    } catch (error) {
+      console.error("Routing failed:", error);
+      setRouteError("Error connecting to routing service");
+    } finally {
+      setCalculatingRoute(false);
+    }
+  };
+
+  // Legend Data for RescueNet Classes
+  const legendItems = [
+    { label: 'Water (Natural/Flood)', color: '#1E90FF' },
+    { label: 'Building - No Damage', color: '#32CD32' },
+    { label: 'Building - Minor Damage', color: '#FFD700' },
+    { label: 'Building - Major Damage', color: '#FF8C00' },
+    { label: 'Building - Total Destruction', color: '#8B0000' },
+    { label: 'Vehicle', color: '#8A2BE2' },
+    { label: 'Road - Clear', color: '#A9A9A9' },
+    { label: 'Road - Blocked', color: '#FF0000' },
+    { label: 'Tree', color: '#228B22' },
+    { label: 'Pool', color: '#00BFFF' },
+    { label: 'Other', color: '#808080' }
+  ];
+
   return (
     <div style={{ display: 'flex', height: "100vh", width: "100vw", backgroundColor: "#1e1e1e", color: "white", overflow: 'hidden' }}>
       
-      <LeftSidebar />
+      <LeftSidebar
+        liveSurvivors={liveSurvivors}
+        onRouteRequest={handleRouteRequest}
+        calculatingRoute={calculatingRoute}
+        routeError={routeError}
+      />
 
       <div style={{ flexGrow: 1, position: 'relative' }}>
         {/* Top Overlay HUD */}
@@ -85,6 +143,19 @@ function App() {
             Live Survivors Found: {liveSurvivors.length} <br/>
             Damage Zones Mapped: {liveDamage.length}
           </p>
+        </div>
+
+        {/* Map Legend Overlay */}
+        <div style={{ position: 'absolute', bottom: 35, right: 15, zIndex: 10, background: 'rgba(0,0,0,0.85)', padding: '10px', borderRadius: '8px', border: '1px solid #333', fontSize: '0.75rem', fontFamily: 'sans-serif' }}>
+          <h4 style={{ margin: '0 0 8px 0', color: '#ddd', fontSize: '0.85rem', borderBottom: '1px solid #555', paddingBottom: '4px' }}>Segmentation Legend</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            {legendItems.map((item, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '12px', height: '12px', backgroundColor: item.color, borderRadius: '2px', border: '1px solid #000' }}></div>
+                <span style={{ color: '#ccc' }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Cesium 3D Globe */}
@@ -172,6 +243,34 @@ function App() {
               />
             );
           })}
+
+          {/* --- 5. SAFE ROUTE POLYLINE --- */}
+          {routePath.length > 0 && (
+            <Entity
+              name="Safe Route"
+              polyline={{
+                positions: routePath,
+                width: 5,
+                material: new Cesium.PolylineGlowMaterialProperty({
+                  glowPower: 0.2,
+                  color: Cesium.Color.CYAN
+                })
+              }}
+            />
+          )}
+
+          {/* --- 6. RESCUE BASE STATION --- */}
+          <Entity
+            position={Cartesian3.fromDegrees(78.4850, 17.3840)}
+            point={{ pixelSize: 15, color: Color.BLUE, outlineColor: Color.WHITE, outlineWidth: 2 }}
+            label={{
+              text: "Rescue Base",
+              font: "14px monospace",
+              fillColor: Color.WHITE,
+              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+              pixelOffset: new Cesium.Cartesian2(0, -20)
+            }}
+          />
         </Viewer>
       </div>
 

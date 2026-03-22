@@ -32,10 +32,16 @@ class SurvivorCluster(models.Model):
 
 class DamageReport(models.Model):
     DAMAGE_TYPES = [
-        ('FIRE', 'Fire'),
-        ('FLOOD', 'Flood'),
-        ('COLLAPSE', 'Collapsed Structure'),
-        ('ROAD_BLOCK', 'Blocked Road'),
+        ('WATER', 'Water (Natural or Flood)'),
+        ('BUILDING_NO_DAMAGE', 'Building - No Damage'),
+        ('BUILDING_MINOR_DAMAGE', 'Building - Minor Damage'),
+        ('BUILDING_MAJOR_DAMAGE', 'Building - Major Damage'),
+        ('BUILDING_TOTAL_DESTRUCTION', 'Building - Total Destruction'),
+        ('VEHICLE', 'Vehicle'),
+        ('ROAD_CLEAR', 'Road - Clear'),
+        ('ROAD_BLOCKED', 'Road - Blocked'),
+        ('TREE', 'Tree'),
+        ('POOL', 'Pool'),
         ('OTHER', 'Other'),
     ]
 
@@ -48,7 +54,7 @@ class DamageReport(models.Model):
 
     location = models.PointField(srid=4326)
 
-    damage_type = models.CharField(max_length=20, choices=DAMAGE_TYPES)
+    damage_type = models.CharField(max_length=50, choices=DAMAGE_TYPES)
     severity_level = models.CharField(max_length=15, choices=SEVERITY_LEVELS)
 
     description = models.TextField(blank=True, null=True)

@@ -36,3 +36,7 @@ tzdata==2025.3
 ujson==5.11.0
 websockets==16.0
 zope.interface==8.2
+networkx
+shapely
+scipy
+numpy

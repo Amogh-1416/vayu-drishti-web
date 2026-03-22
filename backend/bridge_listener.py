@@ -23,13 +23,19 @@ from channels.layers import get_channel_layer
 # Initialize Channel Layer for WebSockets
 channel_layer = get_channel_layer()
 
-# Color Mapping for Disaster Zone Segmentation
+# Color Mapping for Disaster Zone Segmentation based on RescueNet Classes
 COLOR_MAP = {
-    'FIRE': '#FF4500',       # Orange-Red
-    'FLOOD': '#1E90FF',      # Dodger Blue
-    'COLLAPSE': '#8B4513',   # Saddle Brown
-    'ROAD_BLOCK': '#FFFF00', # Yellow
-    'OTHER': '#8B4513'       # Gray
+    'WATER': '#1E90FF',                       # Dodger Blue
+    'BUILDING_NO_DAMAGE': '#32CD32',          # Lime Green
+    'BUILDING_MINOR_DAMAGE': '#FFD700',       # Gold
+    'BUILDING_MAJOR_DAMAGE': '#FF8C00',       # Dark Orange
+    'BUILDING_TOTAL_DESTRUCTION': '#8B0000',  # Dark Red
+    'VEHICLE': '#8A2BE2',                     # Blue Violet
+    'ROAD_CLEAR': '#A9A9A9',                  # Dark Gray
+    'ROAD_BLOCKED': '#FF0000',                # Red
+    'TREE': '#228B22',                        # Forest Green
+    'POOL': '#00BFFF',                        # Deep Sky Blue
+    'OTHER': '#808080'                        # Gray
 }
 
 def start_bridge():
@@ -78,7 +84,8 @@ def start_bridge():
 
                 # --- 2. PROCESS & SAVE DAMAGE (ZONE SEGMENTATION) ---
                 for infra in data['infrastructure']:
-                    d_type = infra['class'].upper()
+                    # Raw ML String: "Building-Total-Destruction" -> DB Format: "BUILDING_TOTAL_DESTRUCTION"
+                    d_type = infra['class'].upper().replace('-', '_').replace(' ', '_')
                     
                     # Validate against your Django Choice Field
                     valid_types = [choice[0] for choice in DamageReport.DAMAGE_TYPES]
