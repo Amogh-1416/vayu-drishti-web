@@ -19,6 +19,11 @@ function App() {
   const [liveDamage, setLiveDamage] = useState([]);
   const [esriProvider, setEsriProvider] = useState(null);
 
+  // Routing State
+  const [routePath, setRoutePath] = useState([]);
+  const [calculatingRoute, setCalculatingRoute] = useState(false);
+  const [routeError, setRouteError] = useState(null);
+
   // WebSockets
   const telemetry = useWebSocket('ws://127.0.0.1:8000/ws/telemetry/');
   const disasterUpdate = useWebSocket('ws://127.0.0.1:8000/ws/disaster/'); // Listen to the Bridge
@@ -71,10 +76,48 @@ function App() {
     return Cartesian3.fromDegrees(78.4867, 17.3850, 100); 
   }, [telemetry]);
 
+  const handleRouteRequest = async (survivor) => {
+    setCalculatingRoute(true);
+    setRouteError(null);
+    try {
+      // Assuming Rescue Base is at some static point (could be made dynamic)
+      const rescueBase = { lat: 17.3840, lng: 78.4850 };
+
+      const response = await fetch('http://127.0.0.1:8000/api/route/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          start_lat: rescueBase.lat,
+          start_lng: rescueBase.lng,
+          end_lat: survivor.lat,
+          end_lng: survivor.lng
+        })
+      });
+
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
+        const routeCartesians = data.path.map(p => Cartesian3.fromDegrees(p.lng, p.lat));
+        setRoutePath(routeCartesians);
+      } else {
+        setRouteError(data.error || "Failed to calculate route");
+      }
+    } catch (error) {
+      console.error("Routing failed:", error);
+      setRouteError("Error connecting to routing service");
+    } finally {
+      setCalculatingRoute(false);
+    }
+  };
+
   return (
     <div style={{ display: 'flex', height: "100vh", width: "100vw", backgroundColor: "#1e1e1e", color: "white", overflow: 'hidden' }}>
       
-      <LeftSidebar />
+      <LeftSidebar
+        liveSurvivors={liveSurvivors}
+        onRouteRequest={handleRouteRequest}
+        calculatingRoute={calculatingRoute}
+        routeError={routeError}
+      />
 
       <div style={{ flexGrow: 1, position: 'relative' }}>
         {/* Top Overlay HUD */}
@@ -172,6 +215,34 @@ function App() {
               />
             );
           })}
+
+          {/* --- 5. SAFE ROUTE POLYLINE --- */}
+          {routePath.length > 0 && (
+            <Entity
+              name="Safe Route"
+              polyline={{
+                positions: routePath,
+                width: 5,
+                material: new Cesium.PolylineGlowMaterialProperty({
+                  glowPower: 0.2,
+                  color: Cesium.Color.CYAN
+                })
+              }}
+            />
+          )}
+
+          {/* --- 6. RESCUE BASE STATION --- */}
+          <Entity
+            position={Cartesian3.fromDegrees(78.4850, 17.3840)}
+            point={{ pixelSize: 15, color: Color.BLUE, outlineColor: Color.WHITE, outlineWidth: 2 }}
+            label={{
+              text: "Rescue Base",
+              font: "14px monospace",
+              fillColor: Color.WHITE,
+              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+              pixelOffset: new Cesium.Cartesian2(0, -20)
+            }}
+          />
         </Viewer>
       </div>
 

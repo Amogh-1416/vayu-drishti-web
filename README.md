@@ -111,3 +111,30 @@ python trigger_test.py
 
 ```
 
+---
+---
+## commands for feature/routing-and-drone branch
+```
+# The steps to run the servers and workers are identical to the integrating branch.
+# Start the Celery worker in vayu-drishti-ml for tasks.py
+"venv\Scripts\python.exe" -m celery -A tasks worker --loglevel=info --pool=solo
+
+# Start the Django Server
+cd backend && python manage.py runserver
+
+# Start bridge_listener.py in vayu-drishti-web Backend
+cd backend && python bridge_listener.py
+
+# Start react server in vayu-drishti-web Frontend
+cd frontend && npm run dev
+
+# Using fake_drone.py with new realistic mock path simulation:
+# You can customize start_lat, start_lng, and duration respectively.
+python fake_drone.py 17.3850 78.4867 60
+
+# Routing Feature
+# 1. As ML processes data (via trigger_test.py or live), survivor clusters appear in the Left Sidebar on the UI.
+# 2. Click "Calculate Safe Route" in the UI to request an optimal route from Rescue Base to the survivors.
+# 3. The Backend uses a spatial Grid-based A* Algorithm to calculate a safe route avoiding Damage zones.
+# 4. A safe path polyline is visualized in CesiumJS rendering over the 3D map.
+```
