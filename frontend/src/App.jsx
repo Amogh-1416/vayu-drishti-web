@@ -109,6 +109,21 @@ function App() {
     }
   };
 
+  // Legend Data for RescueNet Classes
+  const legendItems = [
+    { label: 'Water (Natural/Flood)', color: '#1E90FF' },
+    { label: 'Building - No Damage', color: '#32CD32' },
+    { label: 'Building - Minor Damage', color: '#FFD700' },
+    { label: 'Building - Major Damage', color: '#FF8C00' },
+    { label: 'Building - Total Destruction', color: '#8B0000' },
+    { label: 'Vehicle', color: '#8A2BE2' },
+    { label: 'Road - Clear', color: '#A9A9A9' },
+    { label: 'Road - Blocked', color: '#FF0000' },
+    { label: 'Tree', color: '#228B22' },
+    { label: 'Pool', color: '#00BFFF' },
+    { label: 'Other', color: '#808080' }
+  ];
+
   return (
     <div style={{ display: 'flex', height: "100vh", width: "100vw", backgroundColor: "#1e1e1e", color: "white", overflow: 'hidden' }}>
       
@@ -128,6 +143,19 @@ function App() {
             Live Survivors Found: {liveSurvivors.length} <br/>
             Damage Zones Mapped: {liveDamage.length}
           </p>
+        </div>
+
+        {/* Map Legend Overlay */}
+        <div style={{ position: 'absolute', bottom: 35, right: 15, zIndex: 10, background: 'rgba(0,0,0,0.85)', padding: '10px', borderRadius: '8px', border: '1px solid #333', fontSize: '0.75rem', fontFamily: 'sans-serif' }}>
+          <h4 style={{ margin: '0 0 8px 0', color: '#ddd', fontSize: '0.85rem', borderBottom: '1px solid #555', paddingBottom: '4px' }}>Segmentation Legend</h4>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            {legendItems.map((item, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '12px', height: '12px', backgroundColor: item.color, borderRadius: '2px', border: '1px solid #000' }}></div>
+                <span style={{ color: '#ccc' }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Cesium 3D Globe */}
