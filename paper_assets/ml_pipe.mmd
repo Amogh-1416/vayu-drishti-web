@@ -1,10 +1,17 @@
 graph LR
-    A[Raw Video Feed] --> B[Frame Extraction]
-    B --> C[Preprocessing]
-    C --> D[YOLOv11n Model]
-    C --> E[RescueNet Model]
-    D --> F[Human Detection Confidence > 0.5]
-    E --> G[Semantic Masks: Safe vs Impassable]
-    F --> H[Aggregation]
-    G --> H
-    H --> I[JSON Output to DB]
+    classDef input fill:#9b59b6,stroke:#000,stroke-width:2px,color:#fff;
+    classDef process fill:#3498db,stroke:#000,stroke-width:2px,color:#fff;
+    classDef model fill:#e67e22,stroke:#000,stroke-width:2px,color:#fff;
+    classDef output fill:#2ecc71,stroke:#000,stroke-width:2px,color:#fff;
+
+    A([Raw Video Stream]):::input --> B["Frame Extractor (FPS Limit)"]:::process
+    B --> C["Image Normalization & Resize"]:::process
+
+    C --> D{"YOLOv11n (Heridal)"}:::model
+    C --> E{"RescueNet"}:::model
+
+    D -- Bounding Boxes --> F["Confidence Filter > 0.6"]:::process
+    E -- Semantic Masks --> G["Polygon Vectorization"]:::process
+
+    F --> H(["Survivor JSON Coordinates"]):::output
+    G --> I(["Damage JSON Geometries"]):::output
