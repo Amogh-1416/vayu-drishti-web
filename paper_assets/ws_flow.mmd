@@ -1,11 +1,19 @@
 sequenceDiagram
-    participant UAV
-    participant Django as Django Channels
-    participant Redis as Redis Pub/Sub
-    participant Dashboard as React Client
+    autonumber
+    participant D as UAV Drone
+    participant W as Django WebSocket Server
+    participant R as Redis Pub/Sub
+    participant F as React / CesiumJS Client
 
-    UAV->>Django: Send Telemetry (JSON)
-    Django->>Redis: Publish Message to 'drone_telemetry'
-    Redis-->>Django: Receive Message
-    Django->>Dashboard: Broadcast via WebSocket
-    Dashboard-->>Django: Acknowledge
+    D->>W: Connect (ws://api/drone/id/)
+    W->>R: Subscribe to group 'drone_telemetry'
+    F->>W: Connect (ws://api/dashboard/)
+    W->>R: Subscribe to group 'drone_telemetry'
+
+    loop Real-Time Telemetry Loop
+        D->>W: Send JSON {lat, lng, alt, heading}
+        W->>R: ChannelLayer.group_send()
+        R-->>W: Broadcast Message
+        W->>F: Send JSON {lat, lng, alt, heading}
+        F->>F: Update Cesium 3D Entity Position
+    end
