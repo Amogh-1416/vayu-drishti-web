@@ -1,0 +1,17 @@
+graph TD
+    subgraph UAV Layer
+        A[Drone / UAV] -->|Video & Telemetry| B(Django Backend)
+    end
+
+    subgraph Processing Layer
+        B -->|Image Frames| C{YOLOv11n Detection}
+        B -->|Image Frames| D{RescueNet Segmentation}
+        C -->|Bounding Boxes| E[PostGIS Database]
+        D -->|Damage Polygons| E
+        E -->|Map Data| F[Routing Engine]
+        F -->|Waypoints| B
+    end
+
+    subgraph Presentation Layer
+        B <-->|WebSockets| G[React + CesiumJS Dashboard]
+    end

@@ -1,0 +1,10 @@
+graph LR
+    A[Raw Video Feed] --> B[Frame Extraction]
+    B --> C[Preprocessing]
+    C --> D[YOLOv11n Model]
+    C --> E[RescueNet Model]
+    D --> F[Human Detection Confidence > 0.5]
+    E --> G[Semantic Masks: Safe vs Impassable]
+    F --> H[Aggregation]
+    G --> H
+    H --> I[JSON Output to DB]

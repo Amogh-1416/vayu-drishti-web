@@ -1,11 +1,30 @@
 import docx
 from docx.shared import Pt, Inches, Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.section import WD_SECTION_START
+from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 import os
 
+def create_element(name):
+    return OxmlElement(name)
+
+def create_attribute(element, name, value):
+    element.set(qn(name), value)
+
+def set_number_of_columns(section, cols):
+    sectPr = section._sectPr
+    cols_element = sectPr.xpath('./w:cols')
+    if not cols_element:
+        cols_element = create_element('w:cols')
+        sectPr.append(cols_element)
+    else:
+        cols_element = cols_element[0]
+    create_attribute(cols_element, 'w:num', str(cols))
+    create_attribute(cols_element, 'w:space', '708') # 0.5 inch spacing between columns
+    create_attribute(cols_element, 'w:equalWidth', '1')
+
 def set_style(doc):
-    # Set default style to Times New Roman, typical for IEEE
     style = doc.styles['Normal']
     font = style.font
     font.name = 'Times New Roman'
@@ -20,31 +39,22 @@ def add_title_and_authors(doc):
 
     doc.add_paragraph('') # spacing
 
-    authors = doc.add_paragraph('Author Name 1\nDepartment Name\nInstitution Name\nCity, Country\nemail@domain.com')
-    authors.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    authors_run = authors.runs[0]
-    authors_run.font.size = Pt(11)
+    # Using a table to fake side-by-side authors just for visual presentation
+    table = doc.add_table(rows=1, cols=4)
+    table.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    doc.add_paragraph('') # spacing
+    authors_data = [
+        'Author Name 1\nDepartment Name\nInstitution Name\nCity, Country\nemail@domain.com',
+        'Author Name 2\nDepartment Name\nInstitution Name\nCity, Country\nemail@domain.com',
+        'Author Name 3\nDepartment Name\nInstitution Name\nCity, Country\nemail@domain.com',
+        'Author Name 4\nDepartment Name\nInstitution Name\nCity, Country\nemail@domain.com'
+    ]
 
-    authors2 = doc.add_paragraph('Author Name 2\nDepartment Name\nInstitution Name\nCity, Country\nemail@domain.com')
-    authors2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    authors2_run = authors2.runs[0]
-    authors2_run.font.size = Pt(11)
-
-    doc.add_paragraph('') # spacing
-
-    authors3 = doc.add_paragraph('Author Name 3\nDepartment Name\nInstitution Name\nCity, Country\nemail@domain.com')
-    authors3.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    authors3_run = authors3.runs[0]
-    authors3_run.font.size = Pt(11)
-
-    doc.add_paragraph('') # spacing
-
-    authors4 = doc.add_paragraph('Author Name 4\nDepartment Name\nInstitution Name\nCity, Country\nemail@domain.com')
-    authors4.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    authors4_run = authors4.runs[0]
-    authors4_run.font.size = Pt(11)
+    for i in range(4):
+        cell = table.cell(0, i)
+        p = cell.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.add_run(authors_data[i]).font.size = Pt(11)
 
     doc.add_paragraph('\n')
 
@@ -65,16 +75,20 @@ def add_paragraph(doc, text):
 def main():
     doc = docx.Document()
 
-    # Adjust margins to resemble two-column IEEE format somewhat (though Word doc might just use single column standard for editing)
-    sections = doc.sections
-    for section in sections:
-        section.top_margin = Cm(2.54)
-        section.bottom_margin = Cm(2.54)
-        section.left_margin = Cm(2.54)
-        section.right_margin = Cm(2.54)
+    # Section 1: Title and Authors (Single Column)
+    section1 = doc.sections[-1]
+    section1.top_margin = Cm(2.54)
+    section1.bottom_margin = Cm(2.54)
+    section1.left_margin = Cm(2.54)
+    section1.right_margin = Cm(2.54)
+    set_number_of_columns(section1, 1)
 
     set_style(doc)
     add_title_and_authors(doc)
+
+    # Section 2: Content (Two Column)
+    new_section = doc.add_section(WD_SECTION_START.CONTINUOUS)
+    set_number_of_columns(new_section, 2)
 
     # Abstract
     add_heading(doc, 'ABSTRACT')
@@ -91,7 +105,6 @@ def main():
     hdr_cells = table.rows[0].cells
     hdr_cells[0].text = 'Acronym'
     hdr_cells[1].text = 'Definition'
-    # Add some acronyms
     acronyms = [
         ('UAV', 'Unmanned Aerial Vehicle'),
         ('YOLO', 'You Only Look Once'),
@@ -112,32 +125,52 @@ def main():
     add_heading(doc, 'IV. PROPOSED METHODOLOGY')
     add_paragraph(doc, "The architecture of Vayu Drishti is designed to be both modular and highly scalable. The system is composed of four primary components: the UAV Data Ingestion Layer, the Machine Learning Inference Engine, the Geospatial Routing Layer, and the Interactive 3D Frontend.")
 
-    # Insert System Architecture diagram
+    # Insert System Architecture diagram (Mermaid JS)
     add_paragraph(doc, "A high-level overview of the system architecture is depicted in Fig. 1.")
 
-    if os.path.exists('paper_assets/system_architecture.png'):
+    if os.path.exists('paper_assets/arch.png'):
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         run = p.add_run()
-        run.add_picture('paper_assets/system_architecture.png', width=Inches(6.0))
-        cap = doc.add_paragraph('Fig. 1: System Architecture of Vayu Drishti')
+        run.add_picture('paper_assets/arch.png', width=Inches(3.2))
+        cap = doc.add_paragraph('Fig. 1: Overall System Architecture of Vayu Drishti')
         cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
         cap.runs[0].font.italic = True
         cap.runs[0].font.size = Pt(9)
 
-    add_heading(doc, 'A. UAV Data Ingestion', level=2)
+    add_heading(doc, 'A. UAV Data Ingestion & Real-Time Comms', level=2)
     add_paragraph(doc, "UAVs continuously stream real-time telemetry (GPS, altitude, orientation) and video feeds via WebSockets to our Django-based backend. Redis channel layers manage the high-throughput pub/sub mechanism, ensuring that latency is minimized between data capture and processing.")
+
+    if os.path.exists('paper_assets/ws_flow.png'):
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = p.add_run()
+        run.add_picture('paper_assets/ws_flow.png', width=Inches(3.2))
+        cap = doc.add_paragraph('Fig. 2: WebSocket Data Communication Flow')
+        cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        cap.runs[0].font.italic = True
+        cap.runs[0].font.size = Pt(9)
 
     add_heading(doc, 'B. Machine Learning Inference Pipeline', level=2)
     add_paragraph(doc, "The machine learning pipeline is divided into two parallel streams. The first stream utilizes YOLOv11n, a lightweight yet highly accurate object detection model trained on the Heridal dataset, which specializes in identifying human figures in complex outdoor terrains. The second stream employs RescueNet, a deep learning segmentation architecture fine-tuned to classify different types of disaster damage (e.g., collapsed buildings, blocked roads).")
 
-    # Insert Model Graphs
+    if os.path.exists('paper_assets/ml_pipe.png'):
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        run = p.add_run()
+        run.add_picture('paper_assets/ml_pipe.png', width=Inches(3.2))
+        cap = doc.add_paragraph('Fig. 3: Multi-Model Inference Pipeline')
+        cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        cap.runs[0].font.italic = True
+        cap.runs[0].font.size = Pt(9)
+
+    # Insert Model Graphs (Python Matplotlib)
     if os.path.exists('paper_assets/yolo_loss.png'):
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         run = p.add_run()
-        run.add_picture('paper_assets/yolo_loss.png', width=Inches(3.5))
-        cap = doc.add_paragraph('Fig. 2: Stage 1 Alignment Training (Detection Loss)')
+        run.add_picture('paper_assets/yolo_loss.png', width=Inches(3.2))
+        cap = doc.add_paragraph('Fig. 4: Stage 1 Alignment Training (Detection Loss)')
         cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
         cap.runs[0].font.italic = True
         cap.runs[0].font.size = Pt(9)
@@ -146,8 +179,8 @@ def main():
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         run = p.add_run()
-        run.add_picture('paper_assets/rescuenet_acc.png', width=Inches(3.5))
-        cap = doc.add_paragraph('Fig. 3: Stage 2 RescueNet Fine-Tuning Accuracy')
+        run.add_picture('paper_assets/rescuenet_acc.png', width=Inches(3.2))
+        cap = doc.add_paragraph('Fig. 5: Stage 2 RescueNet Fine-Tuning Accuracy')
         cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
         cap.runs[0].font.italic = True
         cap.runs[0].font.size = Pt(9)
@@ -175,7 +208,7 @@ def main():
     add_paragraph(doc, "[4] S. M. Azimi, \"RescueNet: A High Resolution UAV Semantic Segmentation Dataset for Natural Disaster Damage Assessment,\" in arXiv:2003.11181, 2020.")
 
     doc.save('Vayu_Drishti_Research_Paper.docx')
-    print("Document Vayu_Drishti_Research_Paper.docx created successfully.")
+    print("Document Vayu_Drishti_Research_Paper.docx created successfully in Two-Column IEEE Format with Mermaid Diagrams.")
 
 if __name__ == '__main__':
     main()
