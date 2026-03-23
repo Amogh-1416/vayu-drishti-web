@@ -1,31 +1,17 @@
 graph TD
-    classDef primary fill:#4A90E2,stroke:#000,stroke-width:2px,color:#fff,rx:5px,ry:5px;
-    classDef secondary fill:#50E3C2,stroke:#000,stroke-width:2px,color:#000,rx:5px,ry:5px;
-    classDef database fill:#F5A623,stroke:#000,stroke-width:2px,color:#fff,rx:5px,ry:5px;
-    classDef frontend fill:#E91E63,stroke:#000,stroke-width:2px,color:#fff,rx:5px,ry:5px;
-
-    subgraph "Edge Device (UAV)"
-        A[UAV / Drone<br>Telemetry & Camera]:::primary
+    subgraph UAV Layer
+        A[Drone / UAV] -->|Video & Telemetry| B(Django Backend)
     end
 
-    subgraph "Backend Processing Pipeline"
-        B[Django Channels<br>WebSocket Server]:::secondary
-        C[YOLOv11n<br>Human Detection]:::secondary
-        D[RescueNet<br>Damage Segmentation]:::secondary
-        E[(PostGIS Spatial DB)]:::database
-        F[Grid-Based A*<br>Routing Engine]:::secondary
+    subgraph Processing Layer
+        B -->|Image Frames| C{YOLOv11n Detection}
+        B -->|Image Frames| D{RescueNet Segmentation}
+        C -->|Bounding Boxes| E[PostGIS Database]
+        D -->|Damage Polygons| E
+        E -->|Map Data| F[Routing Engine]
+        F -->|Waypoints| B
     end
 
-    subgraph "Command Center (Frontend)"
-        G[React + CesiumJS<br>3D Dashboard]:::frontend
+    subgraph Presentation Layer
+        B <-->|WebSockets| G[React + CesiumJS Dashboard]
     end
-
-    A -- "Live Video & GPS" --> B
-    B -- "Frames" --> C
-    B -- "Frames" --> D
-    C -- "Survivor Coordinates" --> E
-    D -- "Damage Polygons" --> E
-    E -- "Geo Data" --> F
-    F -- "Safe Paths" --> E
-    B -- "Real-Time Updates" --> G
-    E -- "Map Initialization" --> G
