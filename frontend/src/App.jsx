@@ -24,6 +24,17 @@ function App() {
   const [calculatingRoute, setCalculatingRoute] = useState(false);
   const [routeError, setRouteError] = useState(null);
 
+  // Filter State — controls which layers are visible on the map
+  const [filters, setFilters] = useState({
+    showSurvivors: true,
+    showDamage: true,
+    showDrones: true,
+  });
+
+  const handleFilterChange = (filterName, value) => {
+    setFilters(prev => ({ ...prev, [filterName]: value }));
+  };
+
   // WebSockets
   const telemetry = useWebSocket('ws://127.0.0.1:8000/ws/telemetry/');
   const disasterUpdate = useWebSocket('ws://127.0.0.1:8000/ws/disaster/'); // Listen to the Bridge
@@ -132,6 +143,8 @@ function App() {
         onRouteRequest={handleRouteRequest}
         calculatingRoute={calculatingRoute}
         routeError={routeError}
+        filters={filters}
+        onFilterChange={handleFilterChange}
       />
 
       <div style={{ flexGrow: 1, position: 'relative' }}>
@@ -173,26 +186,28 @@ function App() {
           {/* 2. ADD THIS: Explicitly mount the Esri World Imagery Satellite Map */}
           {esriProvider && <ImageryLayer imageryProvider={esriProvider} />}
           {/* 1. The Drone Entity */}
-          <Entity
-            name="Alpha-1"
-            position={dronePosition}
-            label={{ 
-              text: "Alpha-1", 
-              font: "14px monospace", 
-              fillColor: Cesium.Color.LIME,
-              outlineColor: Cesium.Color.BLACK,
-              outlineWidth: 2,
-              verticalOrigin: Cesium.VerticalOrigin.BOTTOM, 
-              pixelOffset: new Cesium.Cartesian2(0, -20) 
-            }}
-            point={{ pixelSize: 20, color: Cesium.Color.RED }}
-            tracked={isTracked}
-            interpolationAlgorithm={HermitePolynomialApproximation}
-            interpolationDegree={2}
-          />
+          {filters.showDrones && (
+            <Entity
+              name="Alpha-1"
+              position={dronePosition}
+              label={{ 
+                text: "Alpha-1", 
+                font: "14px monospace", 
+                fillColor: Cesium.Color.LIME,
+                outlineColor: Cesium.Color.BLACK,
+                outlineWidth: 2,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM, 
+                pixelOffset: new Cesium.Cartesian2(0, -20) 
+              }}
+              point={{ pixelSize: 20, color: Cesium.Color.RED }}
+              tracked={isTracked}
+              interpolationAlgorithm={HermitePolynomialApproximation}
+              interpolationDegree={2}
+            />
+          )}
 
           {/* 2. Initial Database Load (Historical) */}
-          {disasterEvents.map((event, index) => {
+          {filters.showSurvivors && disasterEvents.map((event, index) => {
             if(!event?.geometry?.coordinates) return null;
             const [lng, lat] = event.geometry.coordinates;
             return (
@@ -206,7 +221,7 @@ function App() {
           })}
 
           {/* --- 3. LIVE SURVIVORS (From YOLO) --- */}
-          {liveSurvivors.map((survivor, index) => (
+          {filters.showSurvivors && liveSurvivors.map((survivor, index) => (
             <Entity
               key={`live-surv-${index}`}
               position={Cartesian3.fromDegrees(survivor.lng, survivor.lat)}
@@ -221,7 +236,7 @@ function App() {
           ))}
 
           {/* --- 4. LIVE DAMAGE ZONES (From YOLO-seg) --- */}
-          {liveDamage.map((damage, index) => {
+          {filters.showDamage && liveDamage.map((damage, index) => {
             // Draw a bounded box of roughly 20x20 meters around the detection coordinate
             const offset = 0.00015; 
             return (

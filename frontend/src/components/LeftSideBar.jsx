@@ -1,6 +1,6 @@
 import React from 'react';
 
-const LeftSidebar = ({ liveSurvivors, onRouteRequest, calculatingRoute, routeError }) => {
+const LeftSidebar = ({ liveSurvivors, onRouteRequest, calculatingRoute, routeError, filters, onFilterChange }) => {
   return (
     <div style={{
       width: '250px',
@@ -19,13 +19,25 @@ const LeftSidebar = ({ liveSurvivors, onRouteRequest, calculatingRoute, routeErr
         <h2 style={{ fontSize: '1.2rem', marginBottom: '15px' }}>Filters</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <label style={{ fontSize: '0.9rem' }}>
-            <input type="checkbox" defaultChecked /> Survivor Clusters
+            <input
+              type="checkbox"
+              checked={filters.showSurvivors}
+              onChange={(e) => onFilterChange('showSurvivors', e.target.checked)}
+            /> Survivor Clusters
           </label>
           <label style={{ fontSize: '0.9rem' }}>
-            <input type="checkbox" defaultChecked /> Damage Reports
+            <input
+              type="checkbox"
+              checked={filters.showDamage}
+              onChange={(e) => onFilterChange('showDamage', e.target.checked)}
+            /> Damage Reports
           </label>
           <label style={{ fontSize: '0.9rem' }}>
-            <input type="checkbox" defaultChecked /> Active Drones
+            <input
+              type="checkbox"
+              checked={filters.showDrones}
+              onChange={(e) => onFilterChange('showDrones', e.target.checked)}
+            /> Active Drones
           </label>
         </div>
       </div>
