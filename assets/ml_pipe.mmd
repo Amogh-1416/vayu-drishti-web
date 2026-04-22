@@ -1,0 +1,17 @@
+graph LR
+    classDef input fill:#F3E5F5,stroke:#4A148C,stroke-width:2px,color:#4A148C,font-size:20px;
+    classDef process fill:#E1F5FE,stroke:#01579B,stroke-width:2px,color:#01579B,font-size:20px;
+    classDef model fill:#FFFDE7,stroke:#F57F17,stroke-width:2px,color:#F57F17,font-size:20px;
+    classDef output fill:#E8F5E9,stroke:#1B5E20,stroke-width:2px,color:#1B5E20,font-size:20px;
+
+    A([Raw Video Stream]):::input --> B["Frame Extractor (5 FPS)"]:::process
+    B --> C["Pre-processing & Resize"]:::process
+
+    C --> D{"YOLOv11n (Heridal)"}:::model
+    C --> E{"YOLOv11-Seg (RescueNet)"}:::model
+
+    D -- Bounding Boxes --> F["Confidence Filter > 0.6"]:::process
+    E -- Semantic Masks --> G["Vectorization to Geo-Polygons"]:::process
+
+    F --> H(["Survivor GPS Coordinates (JSON)"]):::output
+    G --> I(["Damage Severity Classes (JSON)"]):::output

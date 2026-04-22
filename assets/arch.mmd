@@ -1,0 +1,31 @@
+graph TD
+    classDef primary fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#0D47A1,rx:5px,ry:5px,font-size:20px;
+    classDef secondary fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20,rx:5px,ry:5px,font-size:20px;
+    classDef database fill:#FFF3E0,stroke:#E65100,stroke-width:2px,color:#E65100,rx:5px,ry:5px,font-size:20px;
+    classDef frontend fill:#FCE4EC,stroke:#C2185B,stroke-width:2px,color:#880E4F,rx:5px,ry:5px,font-size:20px;
+
+    subgraph "Edge Layer"
+        A["UAV / Drone<br>(Telemetry & Video Stream)"]:::primary
+    end
+
+    subgraph "Backend Infrastructure (Django)"
+        B["WebSocket Server<br>(Django Channels)"]:::secondary
+        C["YOLOv11n Detection<br>(Heridal Dataset)"]:::secondary
+        D["YOLOv11-Seg Segmentation<br>(RescueNet Dataset)"]:::secondary
+        E[("PostGIS Spatial DB")]:::database
+        F["Grid-Based A*<br>Routing Engine"]:::secondary
+    end
+
+    subgraph "Command Center"
+        G["React + CesiumJS<br>3D Dashboard"]:::frontend
+    end
+
+    A -- "Live Frames & GPS" --> B
+    B -- "Video Stream" --> C
+    B -- "Video Stream" --> D
+    C -- "Survivor Bounding Boxes" --> E
+    D -- "Damage Semantic Polygons" --> E
+    E -- "Hazard Buffer Zones" --> F
+    F -- "Safe Navigation Paths" --> E
+    B -- "Real-Time GeoJSON Updates" --> G
+    E -- "Historical Disaster State" --> G

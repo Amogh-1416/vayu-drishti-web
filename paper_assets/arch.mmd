@@ -1,0 +1,31 @@
+graph TD
+    classDef primary fill:#4A90E2,stroke:#000,stroke-width:2px,color:#fff,rx:5px,ry:5px,font-size:24px;
+    classDef secondary fill:#50E3C2,stroke:#000,stroke-width:2px,color:#000,rx:5px,ry:5px,font-size:24px;
+    classDef database fill:#F5A623,stroke:#000,stroke-width:2px,color:#fff,rx:5px,ry:5px,font-size:24px;
+    classDef frontend fill:#E91E63,stroke:#000,stroke-width:2px,color:#fff,rx:5px,ry:5px,font-size:24px;
+
+    subgraph "Edge Device (UAV)"
+        A[UAV / Drone<br>Telemetry & Camera]:::primary
+    end
+
+    subgraph "Backend Processing Pipeline"
+        B[Django Channels<br>WebSocket Server]:::secondary
+        C[YOLOv11n<br>Human Detection]:::secondary
+        D[RescueNet<br>Damage Segmentation]:::secondary
+        E[(PostGIS Spatial DB)]:::database
+        F[Grid-Based A*<br>Routing Engine]:::secondary
+    end
+
+    subgraph "Command Center (Frontend)"
+        G[React + CesiumJS<br>3D Dashboard]:::frontend
+    end
+
+    A -- "Live Video & GPS" --> B
+    B -- "Frames" --> C
+    B -- "Frames" --> D
+    C -- "Survivor Coordinates" --> E
+    D -- "Damage Polygons" --> E
+    E -- "Geo Data" --> F
+    F -- "Safe Paths" --> E
+    B -- "Real-Time Updates" --> G
+    E -- "Map Initialization" --> G
